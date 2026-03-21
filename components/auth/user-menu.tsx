@@ -35,7 +35,7 @@ export function UserMenu() {
         >
           <Avatar>
             <AvatarImage src={image ?? undefined} alt={name ?? "User"} />
-            <AvatarFallback>{initials}</AvatarFallback>
+            <AvatarFallback>JA</AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
