@@ -1,15 +1,31 @@
 import { NextRequest } from 'next/server'
+import { auth } from '@/auth'
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
+  // Verify session — defence-in-depth in addition to middleware
+  const session = await auth()
 
+  if (!session) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  const body = await request.json()
   const langGraphUrl = process.env.LANGGRAPH_API_URL || 'http://localhost:8000/chat'
+
+  // Forward the Keycloak access token so LangGraph can validate it independently
+  const upstreamHeaders: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(session.accessToken && {
+      Authorization: `Bearer ${session.accessToken}`,
+    }),
+  }
 
   const response = await fetch(langGraphUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: upstreamHeaders,
     body: JSON.stringify(body),
   })
 

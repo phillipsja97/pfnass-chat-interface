@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { SessionProvider } from 'next-auth/react'
+import { auth } from '@/auth'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -35,15 +37,20 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Pre-populate SessionProvider server-side to avoid a client-side loading flash
+  const session = await auth()
+
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased h-dvh overflow-hidden">
-        {children}
+        <SessionProvider session={session}>
+          {children}
+        </SessionProvider>
         <Analytics />
       </body>
     </html>
