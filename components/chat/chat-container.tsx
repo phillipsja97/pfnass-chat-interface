@@ -5,6 +5,7 @@ import { ChatMessage } from './chat-message'
 import { ChatInput } from './chat-input'
 import { ThinkingIndicator } from './thinking-indicator'
 import { UserMenu } from '@/components/auth/user-menu'
+import { ThemeToggle } from '@/components/auth/theme-toggle'
 import type { Message } from '@/types/chat'
 
 export function ChatContainer() {
@@ -140,7 +141,10 @@ export function ChatContainer() {
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border px-4 py-3 shrink-0">
         <h2 className="text-sm font-semibold">AI Chat</h2>
-        <UserMenu />
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </header>
 
       {/* Messages area */}
