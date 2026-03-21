@@ -15,3 +15,5 @@ next-env.d.ts
 node_modules/
 .next/
 .DS_Store
+.env
+next-env.d.ts
