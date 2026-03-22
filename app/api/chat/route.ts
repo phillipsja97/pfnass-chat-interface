@@ -36,8 +36,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Stream the response back to the client
-  if (body.stream && response.body) {
+  // If the backend returned a real event-stream, proxy it as-is
+  const contentType = response.headers.get('Content-Type') ?? ''
+  if (body.stream && response.body && contentType.includes('text/event-stream')) {
     return new Response(response.body, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -47,9 +48,9 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  // Non-streaming response
+  // Non-streaming (or JSON) response — return only the `response` field
   const data = await response.json()
-  return new Response(JSON.stringify(data), {
+  return new Response(JSON.stringify(data.response ?? data), {
     headers: { 'Content-Type': 'application/json' },
   })
 }

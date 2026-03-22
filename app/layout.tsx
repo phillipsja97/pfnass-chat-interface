@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/auth'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -58,7 +57,6 @@ export default async function RootLayout({
             {children}
           </SessionProvider>
         </ThemeProvider>
-        <Analytics />
       </body>
     </html>
   )

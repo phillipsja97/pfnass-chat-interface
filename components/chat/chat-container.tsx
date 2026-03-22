@@ -52,71 +52,87 @@ export function ChatContainer() {
         throw new Error('Failed to send message')
       }
 
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error('No reader available')
-      }
-
-      const decoder = new TextDecoder()
-      let assistantContent = ''
+      const responseContentType = response.headers.get('Content-Type') ?? ''
 
       // Add empty assistant message
       setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
       setIsThinking(false)
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+      if (!responseContentType.includes('text/event-stream')) {
+        // Backend returned plain JSON — just display the text directly
+        const text = await response.json()
+        const assistantText = typeof text === 'string' ? text : JSON.stringify(text)
+        setMessages((prev) => {
+          const newMessages = [...prev]
+          const lastMessage = newMessages[newMessages.length - 1]
+          if (lastMessage?.role === 'assistant') {
+            lastMessage.content = assistantText
+          }
+          return newMessages
+        })
+      } else {
+        const reader = response.body?.getReader()
+        if (!reader) {
+          throw new Error('No reader available')
+        }
 
-        const chunk = decoder.decode(value, { stream: true })
-        
-        // Parse SSE data
-        const lines = chunk.split('\n')
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') continue
-            
-            try {
-              const parsed = JSON.parse(data)
-              // Handle different SSE formats - adjust based on your LangGraph backend
-              const token = parsed.content || parsed.token || parsed.text || data
-              if (typeof token === 'string') {
-                assistantContent += token
-                setMessages((prev) => {
-                  const newMessages = [...prev]
-                  const lastMessage = newMessages[newMessages.length - 1]
-                  if (lastMessage?.role === 'assistant') {
-                    lastMessage.content = assistantContent
-                  }
-                  return newMessages
-                })
+        const decoder = new TextDecoder()
+        let assistantContent = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          // Parse SSE data
+          const lines = chunk.split('\n')
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6)
+              if (data === '[DONE]') continue
+
+              try {
+                const parsed = JSON.parse(data)
+                // Handle different SSE formats - adjust based on your LangGraph backend
+                const token = parsed.content || parsed.token || parsed.text || data
+                if (typeof token === 'string') {
+                  assistantContent += token
+                  setMessages((prev) => {
+                    const newMessages = [...prev]
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    if (lastMessage?.role === 'assistant') {
+                      lastMessage.content = assistantContent
+                    }
+                    return newMessages
+                  })
+                }
+              } catch {
+                // If not JSON, treat as plain text token
+                if (data && data !== '[DONE]') {
+                  assistantContent += data
+                  setMessages((prev) => {
+                    const newMessages = [...prev]
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    if (lastMessage?.role === 'assistant') {
+                      lastMessage.content = assistantContent
+                    }
+                    return newMessages
+                  })
+                }
               }
-            } catch {
-              // If not JSON, treat as plain text token
-              if (data && data !== '[DONE]') {
-                assistantContent += data
-                setMessages((prev) => {
-                  const newMessages = [...prev]
-                  const lastMessage = newMessages[newMessages.length - 1]
-                  if (lastMessage?.role === 'assistant') {
-                    lastMessage.content = assistantContent
-                  }
-                  return newMessages
-                })
-              }
+            } else if (line && !line.startsWith(':')) {
+              // Handle raw text streaming (non-SSE format)
+              assistantContent += line
+              setMessages((prev) => {
+                const newMessages = [...prev]
+                const lastMessage = newMessages[newMessages.length - 1]
+                if (lastMessage?.role === 'assistant') {
+                  lastMessage.content = assistantContent
+                }
+                return newMessages
+              })
             }
-          } else if (line && !line.startsWith(':')) {
-            // Handle raw text streaming (non-SSE format)
-            assistantContent += line
-            setMessages((prev) => {
-              const newMessages = [...prev]
-              const lastMessage = newMessages[newMessages.length - 1]
-              if (lastMessage?.role === 'assistant') {
-                lastMessage.content = assistantContent
-              }
-              return newMessages
-            })
           }
         }
       }
@@ -139,8 +155,8 @@ export function ChatContainer() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-border px-4 py-3 shrink-0">
-        <h2 className="text-sm font-semibold">AI Chat</h2>
+      <header className="flex items-center justify-between border-b-2 border-border px-4 py-3 shrink-0">
+        <h2 className="text-sm font-semibold">Agent Chat</h2>
         <div className="flex items-center gap-1">
           <ThemeToggle />
           <UserMenu />
@@ -152,7 +168,7 @@ export function ChatContainer() {
         <div className="mx-auto max-w-3xl px-4 py-6">
           {messages.length === 0 ? (
             <div className="flex h-full min-h-[50vh] flex-col items-center justify-center text-center">
-              <h1 className="mb-2 text-2xl font-semibold">Welcome to Chat</h1>
+              <h1 className="mb-2 text-2xl font-semibold">Agent Chat Interface</h1>
               <p className="text-muted-foreground">
                 Send a message to start the conversation.
               </p>

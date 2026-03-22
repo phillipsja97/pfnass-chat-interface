@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, KeyboardEvent } from 'react'
 import { Send, Loader2 } from 'lucide-react'
+import { Popover, PopoverTrigger, PopoverPortal, PopoverContent, PopoverAnchor } from '@radix-ui/react-popover'
 
 interface ChatInputProps {
   value: string
@@ -39,8 +40,9 @@ export function ChatInput({ value, onChange, onSubmit, isLoading }: ChatInputPro
   }
 
   return (
-    <div className="border-t border-border bg-background p-4">
-      <div className="mx-auto flex max-w-3xl items-end gap-3">
+    <>
+    <div className="border-t-2 border-border bg-background p-4">
+      <div className="mx-auto flex max-w-4x1 items-end gap-3">
         <div className="relative flex-1">
           <textarea
             ref={textareaRef}
@@ -50,8 +52,8 @@ export function ChatInput({ value, onChange, onSubmit, isLoading }: ChatInputPro
             placeholder="Type a message..."
             disabled={isLoading}
             rows={1}
-            className="w-full resize-none rounded-xl border border-input bg-background px-4 py-3 text-base outline-none ring-ring transition-colors placeholder:text-muted-foreground focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
-            style={{ minHeight: '48px', maxHeight: '120px' }}
+            className="w-full resize-none rounded-l border-2 border-border bg-background px-4 py-3 text-base outline-none ring-ring transition-colors placeholder:text-muted-foreground focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ minHeight: '80px', maxHeight: '220px' }}
           />
         </div>
         <button
@@ -68,5 +70,6 @@ export function ChatInput({ value, onChange, onSubmit, isLoading }: ChatInputPro
         </button>
       </div>
     </div>
+    </>
   )
 }
